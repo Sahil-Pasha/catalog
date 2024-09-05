@@ -49,7 +49,7 @@ const StockChart = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Tried with this API but not getting appropriate data
+  // Tried with Alpha Vintage API but not getting appropriate data
 
   //   useEffect(() => {
   //     const fetchStockData = async () => {
@@ -70,7 +70,7 @@ const StockChart = () => {
   //     fetchStockData();
   //   }, []);
 
-  // Tried with this API but not getting appropriate data
+  // Tried with coingecko API but not getting appropriate data
 
   //   useEffect(() => {
   //     const fetchCryptoData = async () => {
