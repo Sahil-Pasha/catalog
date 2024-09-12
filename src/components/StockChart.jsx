@@ -1,27 +1,71 @@
 import React, { useState, useEffect } from "react";
 import {
-  AreaChart,
   Area,
-  XAxis,
-  YAxis,
+  Bar,
   CartesianGrid,
-  Tooltip,
+  ComposedChart,
   ResponsiveContainer,
+  Tooltip,
 } from "recharts";
-import axios from "axios";
+import {
+  graphDatafor1d,
+  graphDatafor3d,
+  graphDatafor1w,
+  graphDatafor1m,
+  graphDatafor6m,
+  graphDatafor1y,
+  graphDataforMax,
+} from "../constants/data";
 
-const StockChart = () => {
+const StockChart = ({ selectedTimeframe }) => {
   const [data, setData] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [tooltipPosition, setTooltipPosition] = useState(0);
+  const [lastValue, setLastValue] = useState(null);
+  const [maxValue, setMaxValue] = useState(null);
 
-  const API_KEY = "IR967YO1QUTCJF6X";
+  const getDataForTimeframe = () => {
+    switch (selectedTimeframe) {
+      case "1d":
+        return graphDatafor1d;
+      case "3d":
+        return graphDatafor3d;
+      case "1w":
+        return graphDatafor1w;
+      case "1m":
+        return graphDatafor1m;
+      case "6m":
+        return graphDatafor6m;
+      case "1y":
+        return graphDatafor1y;
+      case "mx":
+        return graphDataforMax;
+      default:
+        return graphDatafor1w;
+    }
+  };
+
+  useEffect(() => {
+    const selectedData = getDataForTimeframe();
+    setData(selectedData);
+
+    const lastEntry = selectedData[selectedData.length - 1];
+    setLastValue(lastEntry);
+
+    const maxEntry = selectedData.reduce((max, entry) =>
+      entry.uv > max.uv ? entry : max
+    );
+    setMaxValue(maxEntry);
+  }, [selectedTimeframe]);
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#4B40EE] text-white p-2 rounded-md">
-          <p className="intro text-sm">{`${payload[0].value.toLocaleString()}`}</p>
+        <div className="bg-[#4B40EE] rounded-md">
+          <p className="text-sm text-[#FFFFFF] p-1">
+            Max: {maxValue?.uv?.toLocaleString()} <br />
+            Last: {lastValue?.uv?.toLocaleString()}
+          </p>
         </div>
       );
     }
@@ -29,83 +73,10 @@ const StockChart = () => {
     return null;
   };
 
-  const fetchStockData = async () => {
-    const randomPrice = (Math.random() * 100000).toFixed(2);
-    const newData = {
-      name: new Date().toLocaleTimeString(),
-      value: parseFloat(randomPrice),
-    };
-    setTooltipPosition(parseFloat(randomPrice));
-    setData((prevData) => {
-      const updatedData = [...prevData, newData].slice(-100);
-      setActiveIndex(updatedData.length - 1);
-      return updatedData;
-    });
-  };
-
-  useEffect(() => {
-    fetchStockData();
-    const interval = setInterval(fetchStockData, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Tried with Alpha Vintage API but not getting appropriate data
-
-  //   useEffect(() => {
-  //     const fetchStockData = async () => {
-  //       try {
-  //         const API_KEY = "IR967YO1QUTCJF6X";
-  //         let StockSymbol = "AMZN";
-  //         const response = await axios.get(
-  //           `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${StockSymbol}&apikey=${API_KEY}`
-  //         );
-  //         setData(response.data["Time Series (Daily)"]);
-  //       } catch (error) {
-  //         console.error("Error fetching stock data:", error);
-  //       }
-  //       const interval = setInterval(fetchStockData, 1000);
-  //       return () => clearInterval(interval);
-  //     };
-
-  //     fetchStockData();
-  //   }, []);
-
-  // Tried with coingecko API but not getting appropriate data
-
-  //   useEffect(() => {
-  //     const fetchCryptoData = async () => {
-  //       try {
-  //         const response = await axios.get(
-  //           "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart",
-  //           {
-  //             params: {
-  //               vs_currency: "usd",
-  //               days: "1",
-  //               interval: "minute",
-  //             },
-  //           }
-  //         );
-  //         const prices = response.data.prices.map((price) => ({
-  //           name: new Date(price[0]).toLocaleTimeString(),
-  //           value: price[1],
-  //         }));
-  //         setData(prices.slice(-50));
-  //       } catch (error) {
-  //         console.error("Error fetching crypto data", error);
-  //       }
-  //     };
-
-  //     fetchCryptoData();
-
-  //     const interval = setInterval(fetchCryptoData, 60000); // Update every 60 seconds
-
-  //     return () => clearInterval(interval);
-  //   }, []);
-
   return (
     <div>
       <ResponsiveContainer width="100%" height={400}>
-        <AreaChart
+        <ComposedChart
           width={730}
           height={250}
           data={data}
@@ -130,13 +101,23 @@ const StockChart = () => {
           />
           <Area
             type="monotone"
-            dataKey="value"
+            dataKey="uv"
             stroke="#8884d8"
             strokeWidth={2}
             fillOpacity={1}
             fill="url(#colorUv)"
           />
-        </AreaChart>
+          <Bar
+            type="monotone"
+            dataKey="pv"
+            stroke="#E6E8EB"
+            barSize={10}
+            strokeWidth={2}
+            fillOpacity={1}
+            opacity={1}
+            fill="#E6E8EB"
+          />
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

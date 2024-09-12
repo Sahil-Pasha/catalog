@@ -1,12 +1,12 @@
 import React from "react";
 import Chart from "./components/Chart";
+import { BrowserRouter as Router } from "react-router-dom";
 
 function App() {
   return (
-    <div className="">
+    <Router>
       <Chart />
-    </div>
+    </Router>
   );
 }
-
 export default App;
